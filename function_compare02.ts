@@ -42,6 +42,7 @@ class MyClassF implements MyInterface05 {
      */
 }
 
+/* Comparing higher-order functions */
 interface MyInterface06 { myMethod(f: () => void): void; }
 class MyClassG implements MyInterface06 {
     myMethod(f: () => number): void {}
@@ -50,18 +51,86 @@ class MyClassG implements MyInterface06 {
      * Return type number is assignable to return type void,
      * but not same in higher-order function.
      * 
-     * But then, the following example (MyClassI) shows that 
+     * Maybe this is answer. https://github.com/Microsoft/TypeScript/issues/4544#issuecomment-145615015
+     * 
+     * But then, the following example (MyClassJ, MyClassK) shows that 
      * return SuperType is assinable to return type SubType, and vice versa.
      */
 }
 
 
-/* Appendix */
+interface MyInterface06_ { myMethod(f: () => number): void; }
+class MyClassG_ implements MyInterface06_ {
+    myMethod(f: () => void): void {}
+    /** 
+     * Ok.
+     * 
+     * Why?
+     * これが関係しそう。
+     * https://github.com/microsoft/TypeScript/issues/21674#issuecomment-363517206
+     * 
+     * むしろこちらか。  Maybe this is answer. https://github.com/Microsoft/TypeScript/issues/4544#issuecomment-145615015
+     */
+}
+
+
 interface Event { timestamp: number; }
+/* Comparing construct signatures (1) */
+interface MyInterface07 { myMethod(f: { new (): void }): void; }
+class MyClassH implements MyInterface07 {
+    myMethod(f: { new (): Event }): void { let g:Event = new f();}
+    /** 
+     * Ok.
+     * 
+     * construct signature 'new (): number' is assignable to 'new (): void'.
+     * ... Why?
+     * In MyClassH.myMethod, new f() returns number.
+     * In MyInterface07.myMethod, new f() returns undefined.
+     * 
+     * =>
+     * Assignment Compatibility を読むこと。
+     * https://github.com/microsoft/TypeScript/blob/master/doc/spec.md#3114-assignment-compatibility
+     * ここにずばり書いてある。
+     *
+     * S is assignable to a type T is :
+     *
+     * S is an object type, an intersection type, an enum type, or the Number, Boolean, or String primitive type, 
+     * T is an object type, and for each member M in T, one of the following is true:
+     * という条件に対して、
+     *
+     *　・M is a non-specialized call or construct signature and S has an apparent call or construct signature N where, when M and N are instantiated using type Any as the type argument for all type parameters declared by M and N (if any),
+　の場合で、
+     *   　・the result type of M is Void, or the result type of N is assignable to that of M.
+     */
+}
+
+/* Comparing construct signatures (2) */
+interface MyInterface08 { myMethod(f: { new (): string }): void; }
+class MyClassI implements MyInterface08 {
+    myMethod(f: { new (): Event }): void {}
+    /** 
+     * Error.
+     * 
+     * ... Why?
+     * 
+     * =>
+     * Assignment Compatibility を読むこと。上と同じ。
+     * https://github.com/microsoft/TypeScript/blob/master/doc/spec.md#3114-assignment-compatibility
+     * ここにずばり書いてある。
+     * S is an object type, an intersection type, an enum type, or the Number, Boolean, or String primitive type, T is an object type, and for each member M in T, one of the following is true:
+という条件について、
+     *　・M is a non-specialized call or construct signature and S has an apparent call or construct signature N where, when M and N are instantiated using type Any as the type argument for all type parameters declared by M and N (if any),
+　の場合で、
+     *   　・the result type of M is Void, or the result type of N is assignable to that of M.* 
+     */
+}
+
+
+/* Appendix */
 interface MouseEvent extends Event { x: number; y: number }
 
-interface MyInterface07 { myMethod(e: MouseEvent): void; }
-class MyClassH implements MyInterface07 {
+interface MyInterface09 { myMethod(e: MouseEvent): void; }
+class MyClassJ implements MyInterface09 {
     myMethod(e: Event): void { console.log(e.timestamp); }
     /** 
      * Of course, it is Ok.
@@ -70,8 +139,8 @@ class MyClassH implements MyInterface07 {
      */
 }
 
-interface MyInterface08 { myMethod(f: () => Event): void; }
-class MyClassI implements MyInterface08 {
+interface MyInterface10 { myMethod(f: () => Event): void; }
+class MyClassK implements MyInterface10 {
     myMethod(f: () => MouseEvent): void { console.log(f().timestamp); }
     /** 
      * It is also Ok.

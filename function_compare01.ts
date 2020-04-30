@@ -13,6 +13,11 @@ class MyClassA implements MyInterface01 {
      * OK: Return type 'number' is assignable to return type 'void'.
      * Covariant assignment is Ok. In other words, assigning a wider return type to a narrower return type is Ok.
      * See https://www.typescriptlang.org/docs/handbook/type-compatibility.html#comparing-two-functions
+     * 
+     * See also https://github.com/Microsoft/TypeScript/wiki/FAQ#why-are-functions-returning-non-void-assignable-to-function-returning-void
+     * 
+     * And try to use never when you would like to define it never returns a value.
+     * See https://github.com/Microsoft/TypeScript/issues/9603#issuecomment-231654924
      */
 }
 
