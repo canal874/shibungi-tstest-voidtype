@@ -1,0 +1,22 @@
+{
+  "name": "shibungi-tstest-voidtype",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/canal874/shibungi-tstest-voidtype.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/canal874/shibungi-tstest-voidtype/issues"
+  },
+  "homepage": "https://github.com/canal874/shibungi-tstest-voidtype#readme",
+  "devDependencies": {
+    "typescript": "^3.8.3"
+  }
+}

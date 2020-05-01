@@ -3,6 +3,10 @@
  * https://www.earthli.com/news/view_article.php?id=3391
  */
 
+ /* Tested with tsc 3.8.3 */
+
+export {}
+
 interface IB {
     name: string;
 }

@@ -2,145 +2,182 @@
  * Copyright (c) Hidekazu Kubota 
  * This source code is licensed under the Mozilla Public License Version 2.0 found in the LICENSE file in the root directory of this source tree.
  */
+
+/* Tested with tsc 3.8.3 */
+
 export {}
 
+/**
+ * Comparing parameter type (1) 
+ * Fewer parameters are OK.
+ */ 
 interface MyInterface03 { myMethod(x: number): void; }
-/* Comparing parameter type (1) */
-class MyClassC implements MyInterface03 {
+class MyClass03 implements MyInterface03 {
     myMethod(): void {}
-    /* OK: Fewer arguments are Ok. 
-     * MyInterface03.myMethod has 1 argument and this method has no argument.
+    /* OK: MyInterface03.myMethod has 1 argument and this method has no argument.
      * https://www.typescriptlang.org/docs/handbook/type-compatibility.html#comparing-two-functions
      * https://basarat.gitbook.io/typescript/type-system/type-compatibility#number-of-arguments
      */    
 }
-/* Comparing parameter type (2) */
-class MyClassD implements MyInterface03 {
+/**
+ * Comparing parameter type (1b) 
+ * Parameter type 'void' does not mean no argument.
+ */
+interface MyInterface03b { myMethod(x: number): void; }
+class MyClass03b implements MyInterface03b {
     myMethod(x: void): void {}
     /** 
      * Error: Type '(x: void) => void' is not assignable to type '(x: number) => void'.
-     * void parameter type does not mean no argument.
-     * Use MyInterface04 to allow void parameter type.
+     * Use union type to allow parameter type 'void' like MyInterface03c.
      */
 }
-interface MyInterface04 { myMethod(x: number | void): void; }
-/* Comparing parameter type (3) */
-class MyClassE implements MyInterface04 {
-    myMethod(x: void): void {}
-    /* Ok. */
+/**
+ * Comparing parameter type (1c) 
+ * Of course, paremeter type 'void' is assignable to a union type of 'void' and 'non-void'.
+ */
+interface MyInterface03c { myMethod(x: void | number): void; }
+class MyClass03c implements MyInterface03c {
+    myMethod(x: void): void {} /* Ok. */
 }
 
 
-interface MyInterface05 { myMethod(x: void): void; } // Variable of type void: https://www.typescriptlang.org/docs/handbook/basic-types.html#void
-/* Comparing parameter type (4) */
-class MyClassF implements MyInterface05 {
+/**
+ * Comparing parameter type (2)
+ * Both have equal number of parameters, but different types.
+ */
+interface MyInterface04 { myMethod(x: void): void; } 
+class MyClass04 implements MyInterface04 {
     myMethod(x: number): void {}
     /** 
-     * Error: Type '(x: number) => void' is not assignable to type '(x: void) => void'.
-     * Return type number is assignable to return type void,
-     * but not same in parameter type.
+     * Error: Type 'void' is not assignable to type 'number'.
+     * 
+     * Note that type checker try to assign a parameter type of the declaration 'myMethod(x: void): void'
+     * to a parameter type of its implementation 'myMethod(x: number): void {}'
+     * when check compatibility of two functions.
+     * The reason is currently unknown. https://github.com/microsoft/TypeScript/issues/38284
      */
 }
 
-/* Comparing higher-order functions */
-interface MyInterface06 { myMethod(f: () => void): void; }
-class MyClassG implements MyInterface06 {
+/**
+ * Comparing parameter type (2b)
+ * Both have equal number of parameters, but different types.
+ */
+interface MyInterface04b { myMethod(x: number): void; } 
+class MyClass04b implements MyInterface04b {
+    myMethod(x: void): void {}
+    /** 
+     * It is also Error. Type 'number' is not assignable to type 'void'.
+     */
+}
+
+/**
+ * Comparing paremeter type (3)
+ * In case of parameter type is callback function
+ */
+interface MyInterface05 { myMethod(f: () => void ): void; }
+class MyClass05 implements MyInterface05 {
     myMethod(f: () => number): void {}
     /** 
-     * Error: Type '() => number' is not compatible to type '() => void'.
-     * Return type number is assignable to return type void,
+     * Error: 
+     * Return type 'number' is assignable to return type 'void' (See MyClass01),
      * but not same in higher-order function.
      * 
-     * Maybe this is answer. https://github.com/Microsoft/TypeScript/issues/4544#issuecomment-145615015
-     * 
-     * But then, the following example (MyClassJ, MyClassK) shows that 
-     * return SuperType is assinable to return type SubType, and vice versa.
+     * The type checker try to assign a parameter type of the declaration 'myMethod(f: () => void): void'
+     * to a parameter type of its implementation 'myMethod(f: () => number): void {}'
+     * when check compatibility of two functions.
+     * The reason is currently unknown. https://github.com/microsoft/TypeScript/issues/38284
+     *
+     * So the reason of this type error is that return type 'void' is not assignable to return type 'number'.
      */
 }
 
-
-interface MyInterface06_ { myMethod(f: () => number): void; }
-class MyClassG_ implements MyInterface06_ {
+/**
+ * Comparing paremeter type (3b)
+ * In case of parameter type is callback function
+ */
+interface MyInterface05b { myMethod(f: () => number ): void; }
+class MyClass05b implements MyInterface05b {
     myMethod(f: () => void): void {}
-    /** 
-     * Ok.
-     * 
-     * Why?
-     * これが関係しそう。
-     * https://github.com/microsoft/TypeScript/issues/21674#issuecomment-363517206
-     * 
-     * むしろこちらか。  Maybe this is answer. https://github.com/Microsoft/TypeScript/issues/4544#issuecomment-145615015
-     */
+    /* OK: Return type 'number' is assignable to return type 'void'. */
 }
 
+/**
+ * Comparing return type and comparing parameter type (3c)
+ * In short:
+ */
 
+ // Return type:
+ // Type checker tries to assign right return type to left return type
+const a: () => number = (): void => {};  // Type error.
+const b: () => void = (): number => { return 7 };  // Ok.
+
+// Parameter type:
+// Type checker tries to assign left parameter type to right parameter type
+const f: (x: () => number) => number = (y: () => void) => 7;  // Ok.
+const g: (x: () => void) => number = (y: () => 7) => 7; // Type error.
+
+
+/**
+ * Comparing construct signatures (1) 
+ * Constructor that returns void type is assinable to the constructor that returns non-void type.
+ */
 interface Event { timestamp: number; }
-/* Comparing construct signatures (1) */
-interface MyInterface07 { myMethod(f: { new (): void }): void; }
-class MyClassH implements MyInterface07 {
+interface MyInterface06 { myMethod(f: { new (): void }): void; }
+class MyClass06 implements MyInterface06 {
     myMethod(f: { new (): Event }): void { let g:Event = new f();}
     /** 
      * Ok.
+     * It seemes that return type 'Event' is assignable to return type 'void' in construct signatures.
      * 
-     * construct signature 'new (): number' is assignable to 'new (): void'.
-     * ... Why?
-     * In MyClassH.myMethod, new f() returns number.
-     * In MyInterface07.myMethod, new f() returns undefined.
-     * 
-     * =>
-     * Assignment Compatibility を読むこと。
-     * https://github.com/microsoft/TypeScript/blob/master/doc/spec.md#3114-assignment-compatibility
-     * ここにずばり書いてある。
-     *
-     * S is assignable to a type T is :
-     *
-     * S is an object type, an intersection type, an enum type, or the Number, Boolean, or String primitive type, 
-     * T is an object type, and for each member M in T, one of the following is true:
-     * という条件に対して、
-     *
-     *　・M is a non-specialized call or construct signature and S has an apparent call or construct signature N where, when M and N are instantiated using type Any as the type argument for all type parameters declared by M and N (if any),
-　の場合で、
-     *   　・the result type of M is Void, or the result type of N is assignable to that of M.
+     * This behavior is reverse of the behavior of the above case of callback function.
+     * The reason is currently unknown. Can anyone explain why?
      */
 }
 
-/* Comparing construct signatures (2) */
-interface MyInterface08 { myMethod(f: { new (): string }): void; }
-class MyClassI implements MyInterface08 {
-    myMethod(f: { new (): Event }): void {}
+/**
+ *  Comparing construct signatures (1b)
+ *  Constructor that returns non-void type is assinable to the constructor that returns void type.
+ */
+interface MyInterface06b { myMethod(f: { new (): Event }): void; }
+class MyClass06b implements MyInterface06b {
+    myMethod(f: { new (): void }): void {}
     /** 
-     * Error.
-     * 
-     * ... Why?
-     * 
-     * =>
-     * Assignment Compatibility を読むこと。上と同じ。
-     * https://github.com/microsoft/TypeScript/blob/master/doc/spec.md#3114-assignment-compatibility
-     * ここにずばり書いてある。
-     * S is an object type, an intersection type, an enum type, or the Number, Boolean, or String primitive type, T is an object type, and for each member M in T, one of the following is true:
-という条件について、
-     *　・M is a non-specialized call or construct signature and S has an apparent call or construct signature N where, when M and N are instantiated using type Any as the type argument for all type parameters declared by M and N (if any),
-　の場合で、
-     *   　・the result type of M is Void, or the result type of N is assignable to that of M.* 
+     * It is also Ok.
+     */
+}
+
+/**
+ * Comparing construct signatures (1c) 
+ * Constructor that returns non-void type is not assinable to the constructor that returns another non-void type.
+ */
+interface Event { timestamp: number; }
+interface MyInterface06c { myMethod(f: { new (): string }): void; }
+class MyClass06c implements MyInterface06c {
+    myMethod(f: { new (): Event }): void { let g:Event = new f();}
+    /** 
+     * Error. Type 'string' is not assignable to type 'Event'.
      */
 }
 
 
-/* Appendix */
+/**
+ * Appendix
+ * Comparing super type and sub type
+ */
 interface MouseEvent extends Event { x: number; y: number }
-
-interface MyInterface09 { myMethod(e: MouseEvent): void; }
-class MyClassJ implements MyInterface09 {
+interface MyInterface07 { myMethod(e: MouseEvent): void; }
+class MyClass07 implements MyInterface07 {
     myMethod(e: Event): void { console.log(e.timestamp); }
     /** 
      * Of course, it is Ok.
-     * In addtion to that, function parameters are bivariant. 
+     * 
+     * SuperType is assinable to return type SubType, and vice versa (bivariant).
      * See: https://www.typescriptlang.org/docs/handbook/type-compatibility.html#function-parameter-bivariance
      */
 }
 
-interface MyInterface10 { myMethod(f: () => Event): void; }
-class MyClassK implements MyInterface10 {
+interface MyInterface07b { myMethod(f: () => Event): void; }
+class MyClass07b implements MyInterface07b {
     myMethod(f: () => MouseEvent): void { console.log(f().timestamp); }
     /** 
      * It is also Ok.
