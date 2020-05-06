@@ -15,11 +15,13 @@ interface MyInterface01 { myMethod(): void; }
 class MyClass01 implements MyInterface01 {
     myMethod(): number { return 100; }
     /**
-     * OK: Return type 'number' is assignable to return type 'void'.
-     * Covariant assignment is Ok. In other words, assigning a wider return type to a narrower return type is Ok.
-     * See https://www.typescriptlang.org/docs/handbook/type-compatibility.html#comparing-two-functions
+     * OK.
+     * Return type 'number' is assignable to return type 'void'.
      * 
-     * See also https://github.com/Microsoft/TypeScript/wiki/FAQ#why-are-functions-returning-non-void-assignable-to-function-returning-void
+     * "substitutability" primer
+     *  -- the fact that MyClass01.myMethod() returns "more" information than MyInterface01.myMethod() is expecting
+     *     is a valid substitution.
+     * See https://github.com/Microsoft/TypeScript/wiki/FAQ#why-are-functions-returning-non-void-assignable-to-function-returning-void
      * 
      * From another perspective, 
      * https://github.com/Microsoft/TypeScript/issues/4544#issuecomment-145615015
@@ -38,19 +40,19 @@ class MyClass01 implements MyInterface01 {
  */
 interface MyInterface01b { myMethod(): never; myMethod2(): never; }
 class MyClass01b implements MyInterface01b {
-    myMethod(): number { return 100; } /* Type error. It differs from MyClass01. */
+    myMethod(): number { return 100; } /* Type error. The result differs from MyClass01. */
     myMethod2(): never { while( true ); } /* Ok. See https://github.com/Microsoft/TypeScript/issues/9603#issuecomment-231654924 */
 }
 
 /**
  * Comparing return type (2)
- * Type '() => void' is not assignable to type '() => non-void'.
+ * Return type '() => void' is not assignable to return type '() => non-void'.
  */
 interface MyInterface02 { myMethod(): number; }
 class MyClassB implements MyInterface02 {
     myMethod(): void {}
     /**
-     * Type Error: Type '() => void' is not assignable to type '() => number'.
+     * Type Error. Type '() => void' is not assignable to type '() => number'.
      * The return type 'void' does not contain enough data for type 'number'.
      */
 }
