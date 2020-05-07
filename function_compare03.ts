@@ -11,6 +11,8 @@ export {}
  * Appendix: TypeScript function types are just special cases of TypeScript object types.
  *
  * https://github.com/Microsoft/TypeScript/blob/master/doc/spec.md#13-object-types
+ * https://microsoft.github.io/TypeScript-New-Handbook/everything/#call-signatures
+ * 
  * The bare signature indicates that instances of the interface are callable. 
  * This example illustrates that TypeScript function types are just special cases of TypeScript object types.
  * Specifically, function types are object types that contain one or more call signatures. 
