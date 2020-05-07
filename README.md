@@ -1,0 +1,1 @@
+TypeScript examples of type compatibility in comparing functions including void type.
