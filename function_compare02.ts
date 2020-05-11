@@ -117,8 +117,8 @@ const func5d: (f: { new (): void }) => void = (f: { new (): Event }): void => { 
 
 /**
  * Comparing paremeter type (3c)
- * Note that return type 'non-void' and return type 'void' are not evaluated bivariantly
- * when an argument is callback function.
+ * Note that return type 'non-void' is assignable to return type 'void', but 'non-void' is not super-type of 'void'.
+ * So, return type 'non-void' and return type 'void' are not evaluated bivariantly.
  */
 interface MyInterface05e { myMethod(f: () => void): void; }
 class MyClass05e implements MyInterface05e {
