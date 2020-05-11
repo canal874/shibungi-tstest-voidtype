@@ -3,7 +3,7 @@
  * This source code is licensed under the Mozilla Public License Version 2.0 found in the LICENSE file in the root directory of this source tree.
  */
 
-/* Tested with tsc 3.8.3 */
+/* Tested with tsc 3.8.3 with strict compiler options */
 
 export {}
 
